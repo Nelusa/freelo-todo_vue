@@ -33,12 +33,24 @@
 import { ref } from "vue";
 import FormWrapper from "./FormWrapper.vue";
 import FormActions from "./FormActions.vue";
+import { watch } from "vue";
 
 export default {
   props: ["onShowForm", "onEditTask", "editedTodo"],
   setup(props) {
     const taskTitle = ref(props.editedTodo?.title || "");
     const taskDescription = ref("");
+
+    console.log(props.editedTodo.title);
+
+    watch(
+      () => props.editedTodo,
+      (newEditedTodo) => {
+        taskTitle.value = newEditedTodo?.title || "";
+        taskDescription.value = newEditedTodo?.description || "";
+        console.log(newEditedTodo.title);
+      }
+    );
 
     const handleSubmit = (e) => {
       e.preventDefault();
@@ -52,8 +64,6 @@ export default {
       props.onEditTask(updatedTask);
       props.onShowForm();
     };
-
-    console.log(props.editedTodo.status);
 
     const handleTitleChange = (e) => {
       taskTitle.value = e.target.value;

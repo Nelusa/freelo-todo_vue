@@ -4,7 +4,7 @@
       v-if="showForm"
       :onShowForm="hideTodoForm"
       :editedTodo="editedTodo"
-      @editTask="handleEditTodo(todo)"
+      :onEditTask="handleEditTask"
     />
     <li class="flex justify-between items-center lg:justify-normal mt-5">
       <EllipsisVerticalIcon
@@ -41,9 +41,14 @@
           <Icon>
             <TagIcon class="cursor-not-allowed" />
           </Icon>
-          <div>
-            <Priority :todo="todo" :isDetail="true" />
-          </div>
+          <ExclamationTriangleIcon
+            :class="{
+              'text-red-600': todo.priority === 'high',
+              'text-yellow-600': todo.priority === 'medium',
+              'text-green-600': todo.priority === 'low',
+            }"
+            class="w-5 h-5"
+          />
         </div>
       </div>
     </li>
@@ -59,16 +64,17 @@
 <script>
 import { PencilIcon, PlayIcon, TagIcon } from "@heroicons/vue/24/outline";
 import { EllipsisVerticalIcon } from "@heroicons/vue/20/solid";
+import { ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
 import Icon from "../components/ui/Icon.vue";
 import Checkbox from "../components/ui/Checkbox.vue";
 import { computed } from "vue";
 import { useStore } from "vuex";
 import EditForm from "../components/forms/EditForm.vue";
-// import classNames from "../helpers/classNames";
 import Priority from "../components/ui/Priority.vue";
 import Assignee from "../components/ui/Assignee.vue";
 import DueDate from "../components/ui/DueDate.vue";
 import { useRouter, useRoute } from "vue-router";
+import { ref } from "vue";
 
 export default {
   components: {
@@ -77,6 +83,7 @@ export default {
     EditForm,
     Priority,
     EllipsisVerticalIcon,
+    ExclamationTriangleIcon,
     PencilIcon,
     PlayIcon,
     TagIcon,
@@ -89,7 +96,7 @@ export default {
     const route = useRoute();
     const taskId = route.params.taskId;
 
-    const todo = computed(() => {
+    /*     const todo = computed(() => {
       const todoLists = JSON.parse(localStorage.getItem("todoLists")) || [];
       for (const list of todoLists) {
         const foundTodo = list.todos.find(
@@ -100,17 +107,17 @@ export default {
         }
       }
       return null;
-    });
+    }); */
 
     const showForm = computed(() => !!store.state.editedTodo);
     const editedTodo = computed(() => store.state.editedTodo);
     const currentTodoList = computed(() => store.getters.selectCurrentTodoList);
     const listId = computed(() => currentTodoList.value.id);
+    const todos = computed(() => currentTodoList.value.todos);
 
-    console.log(currentTodoList.value);
-    console.log(listId.value);
-
-    console.log(editedTodo.value);
+    const todo = computed(() => {
+      return todos.value.find((todo) => todo.id === Number(taskId));
+    });
 
     const handleShowForm = (show) => {
       if (!show) {
@@ -122,7 +129,6 @@ export default {
     };
 
     const handleEditTask = (updatedTodo) => {
-      console.log(updatedTodo);
       store.commit("setEditedTodo", updatedTodo);
       store.commit("showFormToggle", {
         listId: listId,
@@ -137,14 +143,6 @@ export default {
 
     const navigateBack = () => {
       router.back();
-    };
-
-    const handleEditTodo = (todo) => {
-      store.commit("setEditedTodo", todo);
-      store.commit("showFormToggle", {
-        listId: listId,
-        show: true,
-      });
     };
 
     const hideTodoForm = () => {
@@ -162,7 +160,6 @@ export default {
       handleShowForm,
       handleEditTask,
       navigateBack,
-      handleEditTodo,
       hideTodoForm,
       todo,
       listId,
